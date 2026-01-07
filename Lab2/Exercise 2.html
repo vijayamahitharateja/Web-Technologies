@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>HTML5 Audio and Video</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        video {
+            width: 450px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>🎵 HTML5 Audio Player (Ringtone)</h2>
+
+    <audio id="audioPlayer" controls>
+        <source src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_41b8bcd7c2.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <p>Current Audio Time: <span id="audioTime">0</span> seconds</p>
+
+    <hr>
+
+    <h2>🎬 HTML5 Video Player</h2>
+
+    <video id="videoPlayer" controls>
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        Your browser does not support the video element.
+    </video>
+
+    <p>Current Video Time: <span id="videoTime">0</span> seconds</p>
+
+    <script>
+        // Audio time display
+        const audio = document.getElementById("audioPlayer");
+        const audioTime = document.getElementById("audioTime");
+
+        audio.addEventListener("timeupdate", () => {
+            audioTime.textContent = audio.currentTime.toFixed(1);
+        });
+
+        // Video time display
+        const video = document.getElementById("videoPlayer");
+        const videoTime = document.getElementById("videoTime");
+
+        video.addEventListener("timeupdate", () => {
+            videoTime.textContent = video.currentTime.toFixed(1);
+        });
+    </script>
+
+</body>
+</html>
