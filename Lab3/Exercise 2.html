@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Intelligent Shopping Cart</title>
+
+    <style>
+        body { font-family: Arial; }
+        table { width: 90%; border-collapse: collapse; }
+        th, td { border: 1px solid black; padding: 8px; text-align: center; }
+        input, select { padding: 5px; }
+    </style>
+</head>
+
+<body>
+
+<h2>Intelligent Shopping Cart</h2>
+
+<!-- ---------- ADD PRODUCT ---------- -->
+<h3>Add Product</h3>
+Name:
+<input type="text" id="pname">
+Category:
+<select id="pcategory">
+    <option>Education</option>
+    <option>Electronics</option>
+    <option>Grocery</option>
+</select>
+Price:
+<input type="number" id="pprice">
+Qty:
+<input type="number" id="pqty" value="1">
+<button onclick="addProduct()">Add</button>
+
+<hr>
+
+<!-- ---------- CART TABLE ---------- -->
+<table>
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Price (₹)</th>
+            <th>Quantity</th>
+            <th>Remove</th>
+        </tr>
+    </thead>
+    <tbody id="cartBody"></tbody>
+</table>
+
+<br>
+
+Coupon Code:
+<input type="text" id="coupon">
+<button onclick="applyCoupon()">Apply</button>
+
+<h3 id="discountInfo"></h3>
+<h2 id="total"></h2>
+
+<script>
+/* ---------- 1. PRODUCT ARRAY ---------- */
+let cart = [];
+let couponDiscount = 0;
+
+/* ---------- ADD PRODUCT ---------- */
+function addProduct() {
+    let name = pname.value;
+    let category = pcategory.value;
+    let price = Number(pprice.value);
+    let qty = Number(pqty.value);
+
+    if (name === "" || price <= 0 || qty <= 0) {
+        alert("Enter valid product details");
+        return;
+    }
+
+    cart.push({ name, category, price, qty });
+    displayCart();
+
+    pname.value = "";
+    pprice.value = "";
+    pqty.value = 1;
+}
+
+/* ---------- DISPLAY CART (REAL TIME) ---------- */
+function displayCart() {
+    let body = document.getElementById("cartBody");
+    body.innerHTML = "";
+
+    let total = 0;
+    let info = "";
+
+    cart.forEach((item, index) => {
+        let itemTotal = item.price * item.qty;
+
+        /* ---------- 3. BULK DISCOUNT ---------- */
+        if (item.qty >= 3) {
+            itemTotal *= 0.9;
+            info = "Bulk discount applied<br>";
+        }
+
+        /* ---------- CATEGORY DISCOUNT ---------- */
+        if (item.category === "Education") {
+            itemTotal *= 0.95;
+            info += "Education discount applied<br>";
+        }
+
+        total += itemTotal;
+
+        body.innerHTML += `
+        <tr>
+            <td>${item.name}</td>
+            <td>${item.category}</td>
+            <td>${item.price}</td>
+            <td>
+                <input type="number" min="1" value="${item.qty}"
+                oninput="updateQty(${index}, this.value)">
+            </td>
+            <td>
+                <button onclick="removeItem(${index})">Remove</button>
+            </td>
+        </tr>`;
+    });
+
+    /* ---------- TIME-BASED DISCOUNT ---------- */
+    let hour = new Date().getHours();
+    if (hour >= 18 && hour <= 21) {
+        total *= 0.95;
+        info += "Evening time discount applied<br>";
+    }
+
+    /* ---------- COUPON DISCOUNT ---------- */
+    total -= couponDiscount;
+
+    discountInfo.innerHTML = info;
+    document.getElementById("total").innerHTML =
+        "Total Amount: ₹" + total.toFixed(2);
+}
+
+/* ---------- UPDATE QUANTITY (REAL TIME) ---------- */
+function updateQty(index, value) {
+    cart[index].qty = Number(value);
+    displayCart();
+}
+
+/* ---------- REMOVE PRODUCT ---------- */
+function removeItem(index) {
+    cart.splice(index, 1);
+    displayCart();
+}
+
+/* ---------- 4. COUPON VALIDATION ---------- */
+function applyCoupon() {
+    let code = coupon.value.trim().toUpperCase();
+    couponDiscount = 0;
+
+    if (code.startsWith("SAVE")) {
+        couponDiscount = 100;
+        alert("₹100 discount applied");
+    }
+    else if (code.includes("STUDENT")) {
+        couponDiscount = 150;
+        alert("₹150 student discount applied");
+    }
+    else {
+        alert("Invalid coupon code");
+    }
+
+    displayCart();
+}
+</script>
+
+</body>
+</html>
+

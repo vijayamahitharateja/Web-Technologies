@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Adaptive Registration System</title>
+
+    <style>
+        body {
+            font-family: Arial;
+        }
+
+        input, select {
+            padding: 6px;
+            margin: 5px;
+            width: 250px;
+        }
+
+        .error {
+            color: red;
+            font-size: 13px;
+        }
+
+        .invalid {
+            border: 2px solid red;
+        }
+
+        .valid {
+            border: 2px solid green;
+        }
+
+        #skillsBox {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+
+<h2>Adaptive Registration Form</h2>
+
+<form onsubmit="return validateForm()">
+
+    Name:<br>
+    <input type="text" id="name" onkeyup="validateName()">
+    <div id="nameErr" class="error"></div>
+
+    Email:<br>
+    <input type="text" id="email" onkeyup="validateEmail()">
+    <div id="emailErr" class="error"></div>
+
+    Password:<br>
+    <input type="password" id="password" onkeyup="validatePassword()">
+    <div id="passErr" class="error"></div>
+
+    Confirm Password:<br>
+    <input type="password" id="confirm" onkeyup="validateConfirm()">
+    <div id="confirmErr" class="error"></div>
+
+    Age:<br>
+    <input type="number" id="age" onkeyup="validateAge()">
+    <div id="ageErr" class="error"></div>
+
+    Role:<br>
+    <select id="role" onchange="roleChanged()">
+        <option value="">Select Role</option>
+        <option>Student</option>
+        <option>Teacher</option>
+        <option>Admin</option>
+    </select>
+    <div id="roleErr" class="error"></div>
+
+    <div id="skillsBox">
+        Skills:<br>
+        <input type="text" id="skills">
+    </div>
+
+    <br><br>
+    <button type="submit">Register</button>
+
+</form>
+
+<script>
+/* ---------- NAME VALIDATION ---------- */
+function validateName() {
+    let name = document.getElementById("name");
+    if (name.value.length < 3) {
+        showError(name, "nameErr", "Minimum 3 characters required");
+        return false;
+    }
+    showValid(name, "nameErr");
+    return true;
+}
+
+/* ---------- EMAIL VALIDATION ---------- */
+function validateEmail() {
+    let email = document.getElementById("email");
+    if (!email.value.endsWith("@gmail.com")) {
+        showError(email, "emailErr", "Only @gmail.com allowed");
+        return false;
+    }
+    showValid(email, "emailErr");
+    return true;
+}
+
+/* ---------- PASSWORD VALIDATION ---------- */
+function validatePassword() {
+    let pass = document.getElementById("password");
+    let role = document.getElementById("role").value;
+
+    if (role === "Admin") {
+        let strong = /(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$])/;
+        if (pass.value.length < 8 || !strong.test(pass.value)) {
+            showError(pass, "passErr",
+                "Admin password must be 8 chars, include A-Z, 0-9 & symbol");
+            return false;
+        }
+    } else {
+        if (pass.value.length < 6) {
+            showError(pass, "passErr", "Password must be at least 6 characters");
+            return false;
+        }
+    }
+
+    showValid(pass, "passErr");
+    return true;
+}
+
+/* ---------- CONFIRM PASSWORD ---------- */
+function validateConfirm() {
+    let pass = password.value;
+    let confirm = document.getElementById("confirm");
+
+    if (pass !== confirm.value) {
+        showError(confirm, "confirmErr", "Passwords do not match");
+        return false;
+    }
+    showValid(confirm, "confirmErr");
+    return true;
+}
+
+/* ---------- AGE VALIDATION ---------- */
+function validateAge() {
+    let age = document.getElementById("age");
+    if (age.value < 18) {
+        showError(age, "ageErr", "Age must be 18 or above");
+        return false;
+    }
+    showValid(age, "ageErr");
+    return true;
+}
+
+/* ---------- ROLE CHANGE ---------- */
+function roleChanged() {
+    let role = document.getElementById("role");
+    let skills = document.getElementById("skillsBox");
+
+    if (role.value === "") {
+        showError(role, "roleErr", "Role is required");
+        skills.style.display = "none";
+        return false;
+    }
+
+    skills.style.display = "block";
+    showValid(role, "roleErr");
+    validatePassword();
+    return true;
+}
+
+/* ---------- FORM VALIDATION ---------- */
+function validateForm() {
+    let valid =
+        validateName() &
+        validateEmail() &
+        validatePassword() &
+        validateConfirm() &
+        validateAge() &
+        roleChanged();
+
+    if (!valid) {
+        alert("Please fix validation errors!");
+        return false;
+    }
+
+    alert("Registration Successful!");
+    return true;
+}
+
+/* ---------- COMMON FUNCTIONS ---------- */
+function showError(input, errId, msg) {
+    input.classList.add("invalid");
+    input.classList.remove("valid");
+    document.getElementById(errId).innerHTML = msg;
+}
+
+function showValid(input, errId) {
+    input.classList.remove("invalid");
+    input.classList.add("valid");
+    document.getElementById(errId).innerHTML = "";
+}
+</script>
+
+</body>
+</html>
