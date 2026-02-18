@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>👔 Employee Management - XML AJAX CRUD</title>
+    <style>
+        :root {
+            --primary: #ff6b35;
+            --secondary: #f7931e;
+            --accent: #4ecdc4;
+            --dark: #2c3e50;
+            --light: #ecf0f1;
+            --success: #27ae60;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+            --shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #f5576c 75%, #4facfe 100%);
+            background-size: 400% 400%;
+            animation: gradientShift 15s ease infinite;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,0.3);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .header p {
+            font-size: 18px;
+            opacity: 0.9;
+            position: relative;
+            z-index: 2;
+        }
+
+        .content {
+            padding: 50px;
+            display: grid;
+            gap: 50px;
+            grid-template-columns: 1fr 2fr;
+        }
+
+        .form-section, .table-section {
+            background: linear-gradient(145deg, #ffffff, #f0f2f5);
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 
+                var(--shadow),
+                inset 0 1px 0 rgba(255,255,255,0.8);
+            border: 1px solid rgba(255,255,255,0.5);
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .form-section:hover, .table-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+        }
+
+        h2 {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        h2::before {
+            content: '✦';
+            font-size: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            gap: 20px;
+        }
+
+        label {
+            font-weight: 700;
+            color: var(--dark);
+            font-size: 15px;
+            display: block;
+            margin-bottom: 8px;
+            position: relative;
+        }
+
+        label::after {
+            content: attr(data-required) ' *';
+            color: var(--danger);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 15px;
+            font-size: 16px;
+            background: rgba(255,255,255,0.8);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(5px);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 
+                0 0 0 4px rgba(78, 205, 196, 0.15),
+                0 8px 25px rgba(78, 205, 196, 0.2);
+            transform: translateY(-2px);
+            background: white;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        button {
+            flex: 1;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 15px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        button:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary { 
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            box-shadow: 0 8px 25px rgba(255, 107, 53, 0.4);
+        }
+
+        .btn-success { 
+            background: linear-gradient(135deg, var(--success), #2ecc71);
+            color: white;
+            box-shadow: 0 8px 25px rgba(39, 174, 96, 0.4);
+        }
+
+        .btn-warning { 
+            background: linear-gradient(135deg, var(--warning), #e67e22);
+            color: white;
+            box-shadow: 0 8px 25px rgba(243, 156, 18, 0.4);
+        }
+
+        .btn-danger { 
+            background: linear-gradient(135deg, var(--danger), #c0392b);
+            color: white;
+            box-shadow: 0 8px 25px rgba(231, 76, 60, 0.4);
+        }
+
+        button:hover:not(:disabled) { 
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.3);
+        }
+
+        button:disabled { 
+            background: #bdc3c7 !important;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            padding: 15px 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+            font-weight: 700;
+            font-size: 15px;
+            display: none;
+            animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .success { 
+            background: linear-gradient(135deg, #d1f2eb, #a3e4d7);
+            color: var(--success);
+            border: 2px solid #a3e4d7;
+        }
+
+        .error { 
+            background: linear-gradient(135deg, #fadbd8, #f5b7b1);
+            color: var(--danger);
+            border: 2px solid #f5b7b1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-top: 20px;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--dark), var(--primary));
+            color: white;
+            padding: 20px;
+            font-weight: 700;
+            font-size: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 20px;
+            border-bottom: 1px solid #f0f2f5;
+            transition: all 0.3s ease;
+        }
+
+        tr:hover td {
+            background: linear-gradient(90deg, #f8f9ff, #e8f4f8);
+            transform: scale(1.01);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+            border-radius: 10px;
+            flex: none;
+            font-weight: 600;
+        }
+
+        .loading {
+            text-align: center;
+            color: #7f8c8d;
+            font-style: italic;
+            font-size: 16px;
+            padding: 40px;
+            background: linear-gradient(135deg, #ecf0f1, #bdc3c7);
+            border-radius: 15px;
+            border: 2px dashed #bdc3c7;
+        }
+
+        @media (max-width: 768px) {
+            .content { 
+                grid-template-columns: 1fr; 
+                padding: 25px;
+                gap: 30px;
+            }
+            .btn-group { 
+                flex-direction: column; 
+            }
+            .header h1 { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 Employee Management System</h1>
+            <p>AJAX + XML CRUD Operations</p>
+        </div>
+        
+        <div class="content">
+            <div class="form-section">
+                <h2>Add/Edit Employee</h2>
+                <div id="message"></div>
+                
+                <form id="employeeForm">
+                    <div class="form-grid">
+                        <div>
+                            <label data-required="">ID (Auto-generated)</label>
+                            <input type="number" id="empId" readonly>
+                        </div>
+                        <div>
+                            <label data-required="Required">Name</label>
+                            <input type="text" id="empName" required>
+                        </div>
+                        <div>
+                            <label data-required="Required">Department</label>
+                            <select id="department" required>
+                                <option value="">Select Department</option>
+                                <option value="IT">IT</option>
+                                <option value="HR">HR</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Marketing">Marketing</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label data-required="Required">Salary (₹)</label>
+                            <input type="number" id="salary" min="10000" required>
+                        </div>
+                        <div class="btn-group">
+                            <button type="submit" class="btn-success" id="submitBtn">Add Employee</button>
+                            <button type="button" class="btn-warning" id="clearBtn">Clear</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <div class="table-section">
+                <h2>Employees List</h2>
+                <div id="tableContainer">
+                    <div class="loading">Loading employees from XML...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Same JavaScript functionality - COMPLETELY UNCHANGED -->
+    <script>
+        class EmployeeManager {
+            constructor() {
+                this.form = document.getElementById('employeeForm');
+                this.tableContainer = document.getElementById('tableContainer');
+                this.messageEl = document.getElementById('message');
+                this.editingId = null;
+                
+                this.xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<employees>
+    <employee>
+        <id>1</id>
+        <name>John Doe</name>
+        <department>IT</department>
+        <salary>75000</salary>
+    </employee>
+    <employee>
+        <id>2</id>
+        <name>Jane Smith</name>
+        <department>HR</department>
+        <salary>65000</salary>
+    </employee>
+</employees>`;
+                
+                this.init();
+                this.loadEmployees();
+            }
+            
+            init() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearForm());
+            }
+            
+            async loadEmployees() {
+                this.tableContainer.innerHTML = '<div class="loading">Loading employees from XML...</div>';
+                
+                try {
+                    await this.simulateAjaxDelay(800);
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    
+                    if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                        throw new Error('Malformed XML');
+                    }
+                    
+                    const employees = xmlDoc.getElementsByTagName('employee');
+                    this.renderTable(employees);
+                    
+                } catch (error) {
+                    this.showMessage('❌ Failed to load XML data: ' + error.message, 'error');
+                    this.tableContainer.innerHTML = '<div class="loading">No employees found</div>';
+                }
+            }
+            
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    id: parseInt(document.getElementById('empId').value) || Date.now(),
+                    name: document.getElementById('empName').value.trim(),
+                    department: document.getElementById('department').value,
+                    salary: parseInt(document.getElementById('salary').value)
+                };
+                
+                this.showLoading();
+                
+                try {
+                    await this.simulateAjaxDelay(1000);
+                    
+                    if (!formData.name || !formData.department || formData.salary < 10000) {
+                        throw new Error('Invalid input data');
+                    }
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    
+                    if (this.editingId) {
+                        const employees = xmlDoc.getElementsByTagName('employee');
+                        for (let emp of employees) {
+                            if (parseInt(emp.getElementsByTagName('id')[0].textContent) === this.editingId) {
+                                emp.getElementsByTagName('name')[0].textContent = formData.name;
+                                emp.getElementsByTagName('department')[0].textContent = formData.department;
+                                emp.getElementsByTagName('salary')[0].textContent = formData.salary;
+                                break;
+                            }
+                        }
+                        this.showMessage('✅ Employee updated successfully!', 'success');
+                    } else {
+                        const newEmployee = xmlDoc.createElement('employee');
+                        const idNode = xmlDoc.createElement('id');
+                        idNode.textContent = formData.id;
+                        const nameNode = xmlDoc.createElement('name');
+                        nameNode.textContent = formData.name;
+                        const deptNode = xmlDoc.createElement('department');
+                        deptNode.textContent = formData.department;
+                        const salaryNode = xmlDoc.createElement('salary');
+                        salaryNode.textContent = formData.salary;
+                        
+                        newEmployee.appendChild(idNode);
+                        newEmployee.appendChild(nameNode);
+                        newEmployee.appendChild(deptNode);
+                        newEmployee.appendChild(salaryNode);
+                        
+                        xmlDoc.getElementsByTagName('employees')[0].appendChild(newEmployee);
+                        this.showMessage('✅ Employee added successfully!', 'success');
+                    }
+                    
+                    this.xmlData = new XMLSerializer().serializeToString(xmlDoc);
+                    this.clearForm();
+                    this.loadEmployees();
+                    
+                } catch (error) {
+                    this.showMessage('❌ Error: ' + error.message, 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            editEmployee(id) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    const employees = xmlDoc.getElementsByTagName('employee');
+                    
+                    for (let emp of employees) {
+                        if (parseInt(emp.getElementsByTagName('id')[0].textContent) === id) {
+                            document.getElementById('empId').value = emp.getElementsByTagName('id')[0].textContent;
+                            document.getElementById('empName').value = emp.getElementsByTagName('name')[0].textContent;
+                            document.getElementById('department').value = emp.getElementsByTagName('department')[0].textContent;
+                            document.getElementById('salary').value = emp.getElementsByTagName('salary')[0].textContent;
+                            this.editingId = id;
+                            document.getElementById('submitBtn').textContent = 'Update Employee';
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    this.showMessage('❌ Error loading employee data', 'error');
+                }
+            }
+            
+            async deleteEmployee(id) {
+                if (!confirm('Are you sure you want to delete this employee?')) return;
+                
+                this.showLoading();
+                
+                try {
+                    await this.simulateAjaxDelay(600);
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    const employees = xmlDoc.getElementsByTagName('employee');
+                    
+                    for (let i = 0; i < employees.length; i++) {
+                        if (parseInt(employees[i].getElementsByTagName('id')[0].textContent) === id) {
+                            employees[i].parentNode.removeChild(employees[i]);
+                            break;
+                        }
+                    }
+                    
+                    this.xmlData = new XMLSerializer().serializeToString(xmlDoc);
+                    this.showMessage('✅ Employee deleted successfully!', 'success');
+                    this.loadEmployees();
+                    
+                } catch (error) {
+                    this.showMessage('❌ Delete failed: ' + error.message, 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            renderTable(employees) {
+                if (employees.length === 0) {
+                    this.tableContainer.innerHTML = '<p style="text-align:center;color:#7f8c8d;font-size:18px;">No employees found</p>';
+                    return;
+                }
+                
+                let html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Department</th>
+                                <th>Salary</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                for (let i = 0; i < employees.length; i++) {
+                    const emp = employees[i];
+                    const id = emp.getElementsByTagName('id')[0].textContent;
+                    const name = emp.getElementsByTagName('name')[0].textContent;
+                    const dept = emp.getElementsByTagName('department')[0].textContent;
+                    const salary = emp.getElementsByTagName('salary')[0].textContent;
+                    
+                    html += `
+                        <tr>
+                            <td style="font-weight:700;color:var(--primary);">${id}</td>
+                            <td>${name}</td>
+                            <td><span style="background:linear-gradient(135deg,var(--accent),#45b7d1);color:white;padding:4px 12px;border-radius:20px;font-size:13px;font-weight:600;">${dept}</span></td>
+                            <td><span style="color:var(--success);font-weight:700;font-size:18px;">₹${parseInt(salary).toLocaleString()}</span></td>
+                            <td>
+                                <div class="action-buttons">
+                                    <button class="btn-sm btn-warning" onclick="employeeManager.editEmployee(${id})">✏️ Edit</button>
+                                    <button class="btn-sm btn-danger" onclick="employeeManager.deleteEmployee(${id})">🗑️ Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                
+                html += '</tbody></table>';
+                this.tableContainer.innerHTML = html;
+            }
+            
+            clearForm() {
+                this.form.reset();
+                document.getElementById('empId').value = '';
+                this.editingId = null;
+                document.getElementById('submitBtn').textContent = 'Add Employee';
+            }
+            
+            showMessage(message, type) {
+                this.messageEl.textContent = message;
+                this.messageEl.className = `message ${type}`;
+                this.messageEl.style.display = 'block';
+                setTimeout(() => {
+                    this.messageEl.style.display = 'none';
+                }, 4000);
+            }
+            
+            showLoading() {
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').textContent = '⏳ Processing...';
+            }
+            
+            hideLoading() {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = this.editingId ? '✏️ Update Employee' : '➕ Add Employee';
+            }
+            
+            simulateAjaxDelay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        const employeeManager = new EmployeeManager();
+    </script>
+</body>
+</html>

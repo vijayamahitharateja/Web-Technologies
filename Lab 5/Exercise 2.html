@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📚 Library Book Tracker - XML DOM CRUD</title>
+    <style>
+        :root {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2a;
+            --accent-primary: #7353ba;
+            --accent-secondary: #c4b5fd;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --glass: rgba(255, 255, 255, 0.08);
+            --glow: 0 0 20px rgba(115, 83, 186, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .app-container {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .hero-header {
+            text-align: center;
+            padding: 3rem 2rem;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 3rem;
+            box-shadow: var(--glow);
+        }
+
+        .hero-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent-secondary), var(--accent-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -0.03em;
+        }
+
+        .hero-subtitle {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 420px 1fr;
+            gap: 2.5rem;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--glass);
+            backdrop-filter: blur(25px);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .panel:hover {
+            transform: translateY(-6px);
+            border-color: rgba(115, 83, 186, 0.3);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .panel-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .panel-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--accent-secondary);
+        }
+
+        .form-field {
+            margin-bottom: 2rem;
+        }
+
+        .field-label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .field-input, .field-select {
+            width: 100%;
+            padding: 1.25rem 1.5rem;
+            background: rgba(255, 255, 255, 0.06);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            border-radius: 16px;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .field-input:focus, .field-select:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: var(--glow);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .btn {
+            padding: 1.25rem 2rem;
+            border: none;
+            border-radius: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            color: white;
+            box-shadow: 0 10px 30px rgba(115, 83, 186, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .notification {
+            padding: 1.5rem 2rem;
+            border-radius: 16px;
+            margin-bottom: 2rem;
+            font-weight: 600;
+            display: none;
+            animation: slideIn 0.4s ease;
+        }
+
+        .notification.success {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid var(--success);
+            color: var(--success);
+        }
+
+        .notification.error {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+        }
+
+        .books-grid {
+            display: grid;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .book-card {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .book-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+        }
+
+        .book-card.available::before {
+            background: linear-gradient(90deg, var(--success), #34d399);
+        }
+
+        .book-card.unavailable::before {
+            background: linear-gradient(90deg, var(--danger), #f87171);
+        }
+
+        .book-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(115, 83, 186, 0.3);
+        }
+
+        .book-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+            gap: 1rem;
+        }
+
+        .book-id {
+            background: var(--accent-primary);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 12px;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .book-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+        }
+
+        .status-badge {
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .status-available {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+
+        .status-unavailable {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+
+        .book-actions {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-sm {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 12px;
+        }
+
+        .btn-toggle {
+            background: linear-gradient(135deg, var(--warning), #fbbf24);
+            color: white;
+        }
+
+        .btn-delete {
+            background: linear-gradient(135deg, var(--danger), #f87171);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; gap: 2rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="hero-header">
+            <h1 class="hero-title">📚 Library Book Tracker</h1>
+            <p class="hero-subtitle">XML DOM-powered book management with real-time updates</p>
+        </div>
+
+        <div class="main-grid">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">➕ Add New Book</div>
+                </div>
+                <div id="notification" class="notification"></div>
+                
+                <form id="bookForm">
+                    <div class="form-field">
+                        <label class="field-label">Book ID</label>
+                        <input type="number" id="bookId" class="field-input" readonly placeholder="Auto-assigned">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Title</label>
+                        <input type="text" id="bookTitle" class="field-input" required placeholder="Enter book title">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Author</label>
+                        <input type="text" id="bookAuthor" class="field-input" required placeholder="Enter author name">
+                    </div>
+                    <div class="form-field">
+                        <label class="field-label">Status</label>
+                        <select id="bookStatus" class="field-select" required>
+                            <option value="">Select Status</option>
+                            <option value="Available">Available</option>
+                            <option value="Unavailable">Unavailable</option>
+                        </select>
+                    </div>
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-primary" id="submitBtn">Add Book</button>
+                        <button type="button" class="btn btn-secondary" id="clearBtn">Clear</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">📖 Book Collection</div>
+                </div>
+                <div id="booksContainer">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📚</div>
+                        <h3>No books in library</h3>
+                        <p>Add your first book to get started</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class LibraryManager {
+            constructor() {
+                this.form = document.getElementById('bookForm');
+                this.booksContainer = document.getElementById('booksContainer');
+                this.notification = document.getElementById('notification');
+                this.editingId = null;
+                
+                // Initial empty XML
+                this.xmlData = `<?xml version="1.0" encoding="UTF-8"?>
+<library>
+</library>`;
+                
+                this.init();
+                this.loadBooks();
+            }
+            
+            init() {
+                this.form.addEventListener('submit', (e) => this.handleSubmit(e));
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearForm());
+            }
+            
+            getNextBookId() {
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                const books = xmlDoc.getElementsByTagName('book');
+                const ids = Array.from(books).map(book => parseInt(book.getElementsByTagName('id')[0].textContent));
+                return ids.length > 0 ? Math.max(...ids) + 1 : 1;
+            }
+            
+            async loadBooks() {
+                this.booksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">📚</div>
+                        <h3>Loading books from XML...</h3>
+                    </div>
+                `;
+                
+                try {
+                    await this.simulateAjaxDelay(800);
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    
+                    if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+                        throw new Error('Invalid XML structure');
+                    }
+                    
+                    const books = xmlDoc.getElementsByTagName('book');
+                    this.renderBooks(books);
+                    
+                } catch (error) {
+                    this.showNotification('Failed to load books: ' + error.message, 'error');
+                    this.renderEmptyState();
+                }
+            }
+            
+            async handleSubmit(e) {
+                e.preventDefault();
+                
+                const formData = {
+                    id: parseInt(document.getElementById('bookId').value) || this.getNextBookId(),
+                    title: document.getElementById('bookTitle').value.trim(),
+                    author: document.getElementById('bookAuthor').value.trim(),
+                    status: document.getElementById('bookStatus').value
+                };
+                
+                // Validation
+                if (!formData.title || !formData.author || !formData.status) {
+                    this.showNotification('Please fill all fields', 'error');
+                    return;
+                }
+                
+                this.showLoading();
+                
+                try {
+                    await this.simulateAjaxDelay(1000);
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    
+                    if (this.editingId) {
+                        // UPDATE: Toggle status or edit
+                        const books = xmlDoc.getElementsByTagName('book');
+                        for (let book of books) {
+                            if (parseInt(book.getElementsByTagName('id')[0].textContent) === this.editingId) {
+                                book.getElementsByTagName('title')[0].textContent = formData.title;
+                                book.getElementsByTagName('author')[0].textContent = formData.author;
+                                book.getElementsByTagName('status')[0].textContent = formData.status;
+                                break;
+                            }
+                        }
+                        this.showNotification('Book updated successfully!', 'success');
+                    } else {
+                        // CREATE new book
+                        const newBook = xmlDoc.createElement('book');
+                        const idNode = xmlDoc.createElement('id');
+                        idNode.textContent = formData.id.toString();
+                        const titleNode = xmlDoc.createElement('title');
+                        titleNode.textContent = formData.title;
+                        const authorNode = xmlDoc.createElement('author');
+                        authorNode.textContent = formData.author;
+                        const statusNode = xmlDoc.createElement('status');
+                        statusNode.textContent = formData.status;
+                        
+                        newBook.appendChild(idNode);
+                        newBook.appendChild(titleNode);
+                        newBook.appendChild(authorNode);
+                        newBook.appendChild(statusNode);
+                        
+                        xmlDoc.getElementsByTagName('library')[0].appendChild(newBook);
+                        this.showNotification(`Book added with ID ${formData.id}`, 'success');
+                    }
+                    
+                    // Update XML data
+                    this.xmlData = new XMLSerializer().serializeToString(xmlDoc);
+                    this.clearForm();
+                    this.loadBooks();
+                    
+                } catch (error) {
+                    this.showNotification('Operation failed: ' + error.message, 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            editBook(id) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    const books = xmlDoc.getElementsByTagName('book');
+                    
+                    for (let book of books) {
+                        if (parseInt(book.getElementsByTagName('id')[0].textContent) === id) {
+                            document.getElementById('bookId').value = book.getElementsByTagName('id')[0].textContent;
+                            document.getElementById('bookTitle').value = book.getElementsByTagName('title')[0].textContent;
+                            document.getElementById('bookAuthor').value = book.getElementsByTagName('author')[0].textContent;
+                            document.getElementById('bookStatus').value = book.getElementsByTagName('status')[0].textContent;
+                            this.editingId = id;
+                            document.getElementById('submitBtn').textContent = 'Update Book';
+                            document.getElementById('bookTitle').focus();
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    this.showNotification('Error loading book data', 'error');
+                }
+            }
+            
+            async deleteBook(id) {
+                if (!confirm(`Delete book ID ${id}?`)) return;
+                
+                this.showLoading();
+                
+                try {
+                    await this.simulateAjaxDelay(600);
+                    
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    const books = xmlDoc.getElementsByTagName('book');
+                    
+                    for (let i = 0; i < books.length; i++) {
+                        if (parseInt(books[i].getElementsByTagName('id')[0].textContent) === id) {
+                            books[i].parentNode.removeChild(books[i]);
+                            break;
+                        }
+                    }
+                    
+                    this.xmlData = new XMLSerializer().serializeToString(xmlDoc);
+                    this.showNotification(`Book ID ${id} deleted`, 'success');
+                    this.loadBooks();
+                    
+                } catch (error) {
+                    this.showNotification('Delete failed', 'error');
+                } finally {
+                    this.hideLoading();
+                }
+            }
+            
+            toggleBookStatus(id) {
+                try {
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(this.xmlData, 'text/xml');
+                    const books = xmlDoc.getElementsByTagName('book');
+                    
+                    for (let book of books) {
+                        if (parseInt(book.getElementsByTagName('id')[0].textContent) === id) {
+                            const currentStatus = book.getElementsByTagName('status')[0].textContent;
+                            const newStatus = currentStatus === 'Available' ? 'Unavailable' : 'Available';
+                            book.getElementsByTagName('status')[0].textContent = newStatus;
+                            this.xmlData = new XMLSerializer().serializeToString(xmlDoc);
+                            this.loadBooks();
+                            this.showNotification(`Status changed to ${newStatus}`, 'success');
+                            return;
+                        }
+                    }
+                } catch (error) {
+                    this.showNotification('Status update failed', 'error');
+                }
+            }
+            
+            renderBooks(books) {
+                if (books.length === 0) {
+                    this.renderEmptyState();
+                    return;
+                }
+                
+                let html = '<div class="books-grid">';
+                
+                for (let i = 0; i < books.length; i++) {
+                    const book = books[i];
+                    const id = book.getElementsByTagName('id')[0].textContent;
+                    const title = book.getElementsByTagName('title')[0].textContent;
+                    const author = book.getElementsByTagName('author')[0].textContent;
+                    const status = book.getElementsByTagName('status')[0].textContent;
+                    
+                    html += `
+                        <div class="book-card ${status.toLowerCase()}">
+                            <div class="book-header">
+                                <div class="book-id">#${id}</div>
+                                <span class="status-badge status-${status.toLowerCase()}">${status}</span>
+                            </div>
+                            <div class="book-title">${title}</div>
+                            <div class="book-author">by ${author}</div>
+                            <div class="book-actions">
+                                <button class="btn btn-sm btn-toggle" onclick="libraryManager.toggleBookStatus(${id})">
+                                    ${status === 'Available' ? 'Mark Unavailable' : 'Mark Available'}
+                                </button>
+                                <button class="btn btn-sm" onclick="libraryManager.editBook(${id})" style="background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white;">
+                                    Edit
+                                </button>
+                                <button class="btn btn-sm btn-delete" onclick="libraryManager.deleteBook(${id})">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                html += '</div>';
+                this.booksContainer.innerHTML = html;
+            }
+            
+            renderEmptyState() {
+                this.booksContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 5rem; margin-bottom: 1.5rem;">📚</div>
+                        <h3>No Books Found</h3>
+                        <p>Your library is empty. Add a book to get started!</p>
+                    </div>
+                `;
+            }
+            
+            clearForm() {
+                this.form.reset();
+                document.getElementById('bookId').value = '';
+                this.editingId = null;
+                document.getElementById('submitBtn').textContent = 'Add Book';
+            }
+            
+            showNotification(message, type) {
+                this.notification.textContent = message;
+                this.notification.className = `notification ${type}`;
+                this.notification.style.display = 'block';
+                setTimeout(() => {
+                    this.notification.style.display = 'none';
+                }, 4000);
+            }
+            
+            showLoading() {
+                document.getElementById('submitBtn').disabled = true;
+                document.getElementById('submitBtn').textContent = 'Processing...';
+            }
+            
+            hideLoading() {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = this.editingId ? 'Update Book' : 'Add Book';
+            }
+            
+            simulateAjaxDelay(ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
+            }
+        }
+        
+        // Initialize library manager
+        const libraryManager = new LibraryManager();
+    </script>
+</body>
+</html>
