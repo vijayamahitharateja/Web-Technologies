@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 AJAX Product Search - Single File</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            max-width: 700px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #1e293b;
+            margin-bottom: 30px;
+            font-size: 28px;
+            font-weight: 700;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 30px;
+        }
+        .search-input {
+            width: 100%;
+            padding: 16px 20px 16px 50px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #f8fafc url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%236b7280"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>') no-repeat 16px center;
+            background-size: 20px;
+        }
+        .search-input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+        }
+        .search-input.loading {
+            background: #dbeafe url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="%233b82f6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>') no-repeat 16px center !important;
+            border-color: #3b82f6;
+        }
+        .results-container {
+            min-height: 20px;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px 20px;
+            color: #64748b;
+            font-style: italic;
+            background: #f8fafc;
+            border-radius: 12px;
+            border: 2px dashed #d1d5db;
+        }
+        .products-grid {
+            display: grid;
+            gap: 16px;
+        }
+        .product-card {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+            animation: fadeInUp 0.4s ease forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        .product-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            border-color: #3b82f6;
+        }
+        .product-name {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+        .product-meta {
+            display: flex;
+            gap: 16px;
+            margin-top: 12px;
+            font-size: 14px;
+            color: #64748b;
+        }
+        .price {
+            font-weight: 700;
+            color: #059669;
+            font-size: 16px;
+        }
+        .category {
+            background: #eff6ff;
+            color: #1d4ed8;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .demo-hint {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            color: #475569;
+            font-size: 14px;
+            max-width: 700px;
+            width: 100%;
+        }
+        .demo-hint code {
+            background: #e2e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            color: #1e293b;
+        }
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 16px;
+            border-radius: 12px;
+            border-left: 4px solid #ef4444;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🛍️ Live Product Search</h1>
+        
+        <div class="search-container">
+            <input 
+                type="text" 
+                class="search-input" 
+                id="searchInput"
+                placeholder="Search products (phone, laptop, book, headphones)..."
+            >
+            <div class="results-container" id="resultsContainer"></div>
+        </div>
+    </div>
+
+    <div class="demo-hint">
+        <strong>Try these searches:</strong><br>
+        <code>phone</code> <code>laptop</code> <code>book</code> <code>headphones</code> <code>coffee</code>
+    </div>
+
+    <script>
+        // ✅ PRODUCTS DATABASE (No external JSON file needed!)
+        const PRODUCTS_DATABASE = [
+            {"name": "iPhone 15 Pro", "price": 999, "category": "Smartphones"},
+            {"name": "iPhone 15 Pro Max", "price": 1199, "category": "Smartphones"},
+            {"name": "MacBook Pro 16", "price": 2499, "category": "Laptops"},
+            {"name": "MacBook Air M3", "price": 1299, "category": "Laptops"},
+            {"name": "AirPods Pro 2", "price": 249, "category": "Headphones"},
+            {"name": "AirPods Max", "price": 549, "category": "Headphones"},
+            {"name": "iPad Air 5th Gen", "price": 599, "category": "Tablets"},
+            {"name": "Apple Watch Ultra", "price": 799, "category": "Smartwatches"},
+            {"name": "Dell XPS 13", "price": 1299, "category": "Laptops"},
+            {"name": "Sony WH-1000XM5", "price": 399, "category": "Headphones"},
+            {"name": "Samsung Galaxy Book", "price": 1499, "category": "Laptops"},
+            {"name": "Python Programming Book", "price": 29, "category": "Books"},
+            {"name": "JavaScript Guide", "price": 39, "category": "Books"},
+            {"name": "Coffee Mug", "price": 15, "category": "Home"},
+            {"name": "Gaming Mouse", "price": 89, "category": "Accessories"}
+        ];
+
+        class ProductSearch {
+            constructor() {
+                this.searchInput = document.getElementById('searchInput');
+                this.resultsContainer = document.getElementById('resultsContainer');
+                this.debounceTimer = null;
+                
+                this.init();
+            }
+            
+            init() {
+                this.searchInput.addEventListener('input', () => {
+                    this.debounceSearch();
+                });
+            }
+            
+            debounceSearch() {
+                clearTimeout(this.debounceTimer);
+                this.debounceTimer = setTimeout(() => {
+                    this.performSearch();
+                }, 300); // 300ms debounce delay
+            }
+            
+            async performSearch() {
+                const query = this.searchInput.value.trim().toLowerCase();
+                
+                // Clear previous results
+                this.clearResults();
+                
+                if (query.length === 0) {
+                    return;
+                }
+                
+                // Show loading state
+                this.searchInput.classList.add('loading');
+                
+                try {
+                    // Simulate AJAX delay (realistic network timing)
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    
+                    // Simulate server-side search (case-insensitive)
+                    const results = PRODUCTS_DATABASE.filter(product => 
+                        product.name.toLowerCase().includes(query) ||
+                        product.category.toLowerCase().includes(query)
+                    );
+                    
+                    // Simulate JSON response processing
+                    this.displayResults(results);
+                    
+                } catch (error) {
+                    console.error('Search error:', error);
+                    this.showError('❌ Search service unavailable. Please try again.');
+                } finally {
+                    this.searchInput.classList.remove('loading');
+                }
+            }
+            
+            displayResults(products) {
+                if (products.length === 0) {
+                    this.showNoResults('No results found for your search');
+                    return;
+                }
+                
+                const fragment = document.createDocumentFragment();
+                products.forEach((product, index) => {
+                    const card = this.createProductCard(product, index);
+                    fragment.appendChild(card);
+                });
+                
+                this.resultsContainer.appendChild(fragment);
+            }
+            
+            createProductCard(product, index) {
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                card.innerHTML = `
+                    <div class="product-name">${product.name}</div>
+                    <div class="product-meta">
+                        <span class="price">$${product.price.toLocaleString()}</span>
+                        <span class="category">${product.category}</span>
+                    </div>
+                `;
+                
+                return card;
+            }
+            
+            showNoResults(message) {
+                const noResults = document.createElement('div');
+                noResults.className = 'no-results';
+                noResults.innerHTML = `🔍 ${message}`;
+                this.resultsContainer.appendChild(noResults);
+            }
+            
+            showError(message) {
+                const error = document.createElement('div');
+                error.className = 'error';
+                error.textContent = message;
+                this.resultsContainer.appendChild(error);
+            }
+            
+            clearResults() {
+                this.resultsContainer.innerHTML = '';
+            }
+        }
+        
+        // Initialize when DOM loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new ProductSearch();
+        });
+    </script>
+</body>
+</html>
